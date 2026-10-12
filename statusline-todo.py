@@ -65,7 +65,7 @@ def main():
     pane = os.environ.get("HERDR_PANE_ID", "")
     cache = f"/tmp/statusline-width-{pane.replace(':', '_')}"
     try:
-        if pane and os.path.exists(cache) and time.time() - os.path.getmtime(cache) < 30:
+        if pane and os.path.exists(cache) and time.time() - os.path.getmtime(cache) < 5:
             total = int(open(cache).read())
         elif pane:
             lay = json.loads(subprocess.run(["herdr", "pane", "layout"], capture_output=True, text=True,
@@ -94,7 +94,11 @@ def main():
             limit = max(0, limit - 1)  # last visible row becomes the "+N" line, so height never exceeds the cap
         for t in items[:limit]:
             st = stamp(t)
-            txt = clip(LEAD.sub("", t.get("subject", "")), cap - 3 - (len(st) + 1 if st else 0))
+            subj = LEAD.sub("", t.get("subject", ""))
+            act = (t.get("activeForm") or "").strip()
+            if t["status"] == "in_progress" and act and act.lower() not in subj.lower():
+                subj = f"{subj} – {act}"  # what Claude is doing right now (colleague idea 3)
+            txt = clip(subj, cap - 3 - (len(st) + 1 if st else 0))
             tail = f" {GREY}{st}{RESET}" if st else ""
             rows.append((f"{glyph} {style}{txt}{RESET}{tail}", 2 + width(txt) + (len(st) + 1 if st else 0)))
         if len(items) > limit:
@@ -111,6 +115,19 @@ def main():
     ]
     widths = [cap + 3 for _ in cols]  # equal thirds: use the whole bottom width
     lines = []
+    # captain 2026-10-12: counter for open questions that block work (items marked with ❓)
+    asks = [t for t in tasks if t["status"] != "completed" and t.get("subject", "").lstrip().startswith("❓")]
+    open_ids = {str(t.get("id")) for t in tasks if t["status"] != "completed"}
+    blocked = [t for t in tasks if t["status"] != "completed"
+               and any(str(b) in open_ids for b in (t.get("blockedBy") or []))]
+    n_done, n_all = len(done), len(tasks)
+    filled = round(10 * n_done / n_all) if n_all else 0
+    head = f"{OK}{'█' * filled}{GREY}{'░' * (10 - filled)}{RESET} {BOLD}{n_done}/{n_all} erledigt{RESET}"
+    if blocked:
+        head += f"   {BOLD}\033[38;2;239;68;68m⛔ {len(blocked)} blockiert{RESET}"
+    if asks:
+        head += f"   {BOLD}\033[38;2;245;165;36m❓ {len(asks)} Rückfrage{'n' if len(asks) != 1 else ''} an dich{RESET}"
+    lines.append("\u2800\u2800" + head)
     for i in range(max(len(c) for c in cols)):
         line = "\u2800\u2800"
         for j, c in enumerate(cols):
