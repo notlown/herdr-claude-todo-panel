@@ -12,7 +12,8 @@ Zeigt unter dem Claude-Code-Eingabefeld (z. B. in Herdr) die Aufgabenliste im Ki
 
 ## Installation
 ```
-./install.sh
+git clone https://github.com/notlown/herdr-claude-todo-panel.git
+cd herdr-claude-todo-panel && ./install.sh
 ```
 Dann Claude Code neu starten. `Ctrl+T` klappt Claudes eigene Liste ein, damit sie nicht doppelt steht.
 Voraussetzung: python3 (ohne Zusatzpakete), Terminal mit Truecolor.
