@@ -90,6 +90,8 @@ def main():
 
     def column(title, color, items, glyph, style, more_word, limit=MAX_ROWS):
         rows = [(f"{BOLD}{color}{title}{RESET}", width(title))]
+        if len(items) > limit:
+            limit = max(0, limit - 1)  # last visible row becomes the "+N" line, so height never exceeds the cap
         for t in items[:limit]:
             st = stamp(t)
             txt = clip(LEAD.sub("", t.get("subject", "")), cap - 3 - (len(st) + 1 if st else 0))
@@ -100,10 +102,12 @@ def main():
             rows.append((f"{GREY}{m}{RESET}", width(m)))
         return rows
 
+    # captain 2026-10-12: the panel is exactly as tall as "In Arbeit" needs; the other columns cut to that
+    height = max(1, len(doing))
     cols = [
         column("In Arbeit", ACCENT, doing, f"{BOLD}{ACCENT}●{RESET}", f"{BOLD}{TEXT}", "weitere", limit=len(doing)),
-        column("Fertig", OK, done, f"{OK}✓{RESET}", f"{STRIKE}{GREY}", "ältere"),
-        column("Warteschlange", GREY, queued, f"{GREY}○{RESET}", TEXT, "weitere", limit=len(queued)),
+        column("Fertig", OK, done, f"{OK}✓{RESET}", f"{STRIKE}{GREY}", "ältere", limit=height),
+        column("Warteschlange", GREY, queued, f"{GREY}○{RESET}", TEXT, "weitere", limit=height),
     ]
     widths = [cap + 3 for _ in cols]  # equal thirds: use the whole bottom width
     lines = []
