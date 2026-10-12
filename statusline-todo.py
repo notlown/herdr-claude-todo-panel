@@ -88,8 +88,9 @@ def main():
             return f"seit {mins} min" if mins < 120 else f"seit {hm}"
         return hm if t["status"] == "completed" else f"seit {hm}"
 
-    def column(title, color, items, glyph, style, more_word, limit=MAX_ROWS):
-        rows = [(f"{BOLD}{color}{title}{RESET}", width(title))]
+    def column(title, color, items, glyph, style, more_word, limit=MAX_ROWS, badge=("", 0)):
+        # title row carries the column's own counter in the column colour (captain 2026-10-12)
+        rows = [(f"{BOLD}{color}{title}{RESET} {badge[0]}", width(title) + 1 + badge[1])]
         if len(items) > limit:
             limit = max(0, limit - 1)  # last visible row becomes the "+N" line, so height never exceeds the cap
         for t in items[:limit]:
@@ -108,10 +109,17 @@ def main():
 
     # captain 2026-10-12: the panel is exactly as tall as "In Arbeit" needs; the other columns cut to that
     height = max(1, len(doing))
+    n_done, n_all = len(done), len(tasks)
+    filled = round(10 * n_done / n_all) if n_all else 0
+    bar = f"{OK}{'█' * filled}{GREY}{'░' * (10 - filled)}{RESET} {BOLD}{ACCENT}{n_done}/{n_all} erledigt{RESET}"
+    bar_w = 11 + len(f"{n_done}/{n_all} erledigt")
     cols = [
-        column("In Arbeit", ACCENT, doing, f"{BOLD}{ACCENT}●{RESET}", f"{BOLD}{TEXT}", "weitere", limit=len(doing)),
-        column("Fertig", OK, done, f"{OK}✓{RESET}", f"{STRIKE}{GREY}", "ältere", limit=height),
-        column("Warteschlange", GREY, queued, f"{GREY}○{RESET}", TEXT, "weitere", limit=height),
+        column("In Arbeit", ACCENT, doing, f"{BOLD}{ACCENT}●{RESET}", f"{BOLD}{TEXT}", "weitere", limit=len(doing),
+               badge=(bar, bar_w)),
+        column("Fertig", OK, done, f"{OK}✓{RESET}", f"{STRIKE}{GREY}", "ältere", limit=height,
+               badge=(f"{BOLD}{OK}{len(done)}{RESET}", len(str(len(done))))),
+        column("Warteschlange", GREY, queued, f"{GREY}○{RESET}", TEXT, "weitere", limit=height,
+               badge=(f"{BOLD}{GREY}{len(queued)}{RESET}", len(str(len(queued))))),
     ]
     widths = [cap + 3 for _ in cols]  # equal thirds: use the whole bottom width
     lines = []
@@ -120,14 +128,16 @@ def main():
     open_ids = {str(t.get("id")) for t in tasks if t["status"] != "completed"}
     blocked = [t for t in tasks if t["status"] != "completed"
                and any(str(b) in open_ids for b in (t.get("blockedBy") or []))]
-    n_done, n_all = len(done), len(tasks)
-    filled = round(10 * n_done / n_all) if n_all else 0
-    head = f"{OK}{'█' * filled}{GREY}{'░' * (10 - filled)}{RESET} {BOLD}{n_done}/{n_all} erledigt{RESET}"
-    if blocked:
-        head += f"   {BOLD}\033[38;2;239;68;68m⛔ {len(blocked)} blockiert{RESET}"
+    # blocked / questions sit at the right edge of the title row, like a window's close button
+    flags, flags_w = "", 0
     if asks:
-        head += f"   {BOLD}\033[38;2;245;165;36m❓ {len(asks)} Rückfrage{'n' if len(asks) != 1 else ''} an dich{RESET}"
-    lines.append("\u2800\u2800" + head)
+        t = f"❓ {len(asks)} Rückfrage{'n' if len(asks) != 1 else ''}"
+        flags += f"{BOLD}\033[38;2;245;165;36m{t}{RESET}  "
+        flags_w += width(t) + 2
+    if blocked:
+        t = f"⛔ {len(blocked)} blockiert"
+        flags += f"{BOLD}\033[38;2;239;68;68m{t}{RESET}"
+        flags_w += width(t)
     for i in range(max(len(c) for c in cols)):
         line = "\u2800\u2800"
         for j, c in enumerate(cols):
@@ -135,6 +145,9 @@ def main():
             # no-break spaces: Claude's status line collapses leading/plain whitespace, which shifted a
             # later column under an empty earlier one (captain bug report 2026-10-12)
             line += txt + ("\u2800" * (widths[j] - w) if j < len(cols) - 1 else "")
+            used = 2 + sum(widths[:j]) + w
+        if i == 0 and flags:
+            line += "\u2800" * max(1, total - used - flags_w) + flags
         lines.append(line.rstrip(" \u2800"))
     # two padding rows so the panel does not sit on the window's bottom edge (captain 2026-10-12);
     # a no-break space survives the status line's blank-line trimming
