@@ -117,9 +117,9 @@ def main():
         column("In Arbeit", ACCENT, doing, f"{BOLD}{ACCENT}●{RESET}", f"{BOLD}{TEXT}", "weitere", limit=len(doing),
                badge=(bar, bar_w)),
         column("Fertig", OK, done, f"{OK}✓{RESET}", f"{STRIKE}{GREY}", "ältere", limit=height,
-               badge=(f"{BOLD}{OK}({len(done)}){RESET}", len(str(len(done))) + 2)),
+               badge=(f"\033[1;38;2;78;200;126m({len(done)}){RESET}", len(str(len(done))) + 2)),
         column("Warteschlange", GREY, queued, f"{GREY}○{RESET}", TEXT, "weitere", limit=height,
-               badge=(f"{BOLD}{GREY}({len(queued)}){RESET}", len(str(len(queued))) + 2)),
+               badge=(f"\033[1;38;2;200;200;200m({len(queued)}){RESET}", len(str(len(queued))) + 2)),
     ]
     widths = [cap + 3 for _ in cols]  # equal thirds: use the whole bottom width
     lines = []
