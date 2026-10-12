@@ -111,8 +111,14 @@ def main():
     height = max(1, len(doing))
     n_done, n_all = len(done), len(tasks)
     filled = round(10 * n_done / n_all) if n_all else 0
-    bar = f"{OK}{'█' * filled}{GREY}{'░' * (10 - filled)}{RESET} {BOLD}{ACCENT}{n_done}/{n_all} erledigt{RESET}"
-    bar_w = 11 + len(f"{n_done}/{n_all} erledigt")
+    # progress bar in the column colour with the count written inside it (captain 2026-10-12)
+    label = f"{n_done}/{n_all}"
+    bw = max(12, len(label) + 4)
+    cells = label.center(bw)
+    fill = round(bw * n_done / n_all) if n_all else 0
+    bar = (f"\033[1;38;2;24;24;27;48;2;215;119;87m{cells[:fill]}"
+           f"\033[1;38;2;230;230;230;48;2;70;70;76m{cells[fill:]}{RESET}")
+    bar_w = bw
     cols = [
         column("In Arbeit", ACCENT, doing, f"{BOLD}{ACCENT}●{RESET}", f"{BOLD}{TEXT}", "weitere", limit=len(doing),
                badge=(bar, bar_w)),
