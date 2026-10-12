@@ -116,16 +116,16 @@ def main():
     cells = f" {n_done}/{n_all} "
     bw = len(cells)
     fill = max(1, round(bw * n_done / n_all)) if n_all and n_done else 0
-    bar = (f"\033[1;38;2;16;16;18;48;2;215;119;87m{cells[:fill]}"
-           f"\033[1;38;2;16;16;18;48;2;170;100;78m{cells[fill:]}{RESET}")
+    bar = (f"\033[1;38;2;255;255;255;48;2;215;119;87m{cells[:fill]}"
+           f"\033[1;38;2;255;255;255;48;2;170;100;78m{cells[fill:]}{RESET}")
     bar_w = bw
     cols = [
         column("In Arbeit", ACCENT, doing, f"{BOLD}{ACCENT}●{RESET}", f"{BOLD}{TEXT}", "weitere", limit=len(doing),
                badge=(bar, bar_w)),
         column("Fertig", OK, done, f"{OK}✓{RESET}", f"{STRIKE}{GREY}", "ältere", limit=height,
-               badge=(f"\033[1;38;2;16;16;18;48;2;78;200;126m {len(done)} {RESET}", len(str(len(done))) + 2)),
+               badge=(f"\033[1;38;2;255;255;255;48;2;78;200;126m {len(done)} {RESET}", len(str(len(done))) + 2)),
         column("Warteschlange", GREY, queued, f"{GREY}○{RESET}", TEXT, "weitere", limit=height,
-               badge=(f"\033[1;38;2;16;16;18;48;2;160;160;168m {len(queued)} {RESET}", len(str(len(queued))) + 2)),
+               badge=(f"\033[1;38;2;255;255;255;48;2;160;160;168m {len(queued)} {RESET}", len(str(len(queued))) + 2)),
     ]
     widths = [cap + 3 for _ in cols]  # equal thirds: use the whole bottom width
     lines = []
