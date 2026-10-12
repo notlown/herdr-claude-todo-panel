@@ -11,6 +11,8 @@ import json
 import os
 import re
 import shutil
+import subprocess
+import time
 import sys
 import unicodedata
 
@@ -18,7 +20,7 @@ RESET, BOLD, STRIKE = "\033[0m", "\033[1m", "\033[9m"
 rgb = lambda r, g, b: f"\033[38;2;{r};{g};{b}m"  # noqa: E731
 ACCENT, OK, GREY, TEXT = rgb(215, 119, 87), rgb(78, 200, 126), rgb(136, 136, 136), rgb(224, 224, 224)
 LEAD = re.compile(r"^[\s✅🔨⏳❓]+")
-MAX_ROWS = 6
+MAX_ROWS = 5
 
 
 def width(s):
@@ -57,7 +59,22 @@ def main():
     queued = sorted((t for t in tasks if t["status"] == "pending"), key=num)
     done = sorted((t for t in tasks if t["status"] == "completed"), key=lambda t: -t["_mtime"])
 
-    total = max(90, shutil.get_terminal_size((180, 20)).columns - 4)
+    # status-line commands get no tty: ask Herdr for this pane's real width (cached 30 s), so the three
+    # columns can fill the whole bottom area without a row ever wrapping (captain 2026-10-12)
+    total = 120
+    pane = os.environ.get("HERDR_PANE_ID", "")
+    cache = f"/tmp/statusline-width-{pane.replace(':', '_')}"
+    try:
+        if pane and os.path.exists(cache) and time.time() - os.path.getmtime(cache) < 30:
+            total = int(open(cache).read())
+        elif pane:
+            lay = json.loads(subprocess.run(["herdr", "pane", "layout"], capture_output=True, text=True,
+                                            timeout=1.5).stdout)["result"]["layout"]
+            w = next(x["rect"]["width"] for x in lay["panes"] if x["pane_id"] == pane)
+            total = max(60, w - 4)
+            open(cache, "w").write(str(total))
+    except Exception:  # noqa: BLE001
+        pass
     cap = total // 3 - 2
 
     def column(title, color, items, glyph, style, more_word):
@@ -75,7 +92,7 @@ def main():
         column("Fertig", OK, done, f"{OK}✓{RESET}", f"{STRIKE}{GREY}", "ältere"),
         column("Warteschlange", GREY, queued, f"{GREY}○{RESET}", TEXT, "weitere"),
     ]
-    widths = [min(cap, max(w for _, w in c)) + 3 for c in cols]
+    widths = [cap + 3 for _ in cols]  # equal thirds: use the whole bottom width
     lines = []
     for i in range(max(len(c) for c in cols)):
         line = "\u00a0\u00a0"
