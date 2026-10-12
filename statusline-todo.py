@@ -111,13 +111,13 @@ def main():
     height = max(1, len(doing))
     n_done, n_all = len(done), len(tasks)
     filled = round(10 * n_done / n_all) if n_all else 0
-    # progress bar in the column colour with the count written inside it (captain 2026-10-12)
-    label = f"{n_done}/{n_all}"
-    bw = max(12, len(label) + 4)
-    cells = label.center(bw)
-    fill = round(bw * n_done / n_all) if n_all else 0
-    bar = (f"\033[1;38;2;24;24;27;48;2;215;119;87m{cells[:fill]}"
-           f"\033[1;38;2;230;230;230;48;2;70;70;76m{cells[fill:]}{RESET}")
+    # progress as a pill like the other two counters: " 8/26 " in orange, the done share in full orange and
+    # the rest in a darker orange, so it reads as a counter and a bar at once (captain 2026-10-12)
+    cells = f" {n_done}/{n_all} "
+    bw = len(cells)
+    fill = max(1, round(bw * n_done / n_all)) if n_all and n_done else 0
+    bar = (f"\033[1;38;2;16;16;18;48;2;215;119;87m{cells[:fill]}"
+           f"\033[1;38;2;16;16;18;48;2;170;100;78m{cells[fill:]}{RESET}")
     bar_w = bw
     cols = [
         column("In Arbeit", ACCENT, doing, f"{BOLD}{ACCENT}●{RESET}", f"{BOLD}{TEXT}", "weitere", limit=len(doing),
