@@ -110,10 +110,14 @@ def main():
     # captain 2026-10-12: the panel is exactly as tall as "In Arbeit" needs; the other columns cut to that
     height = max(1, len(doing))
     n_done, n_all = len(done), len(tasks)
-    # each column header shows only its own count; "In Arbeit" = what runs right now
-    cells = f" {len(doing)} "
+    filled = round(10 * n_done / n_all) if n_all else 0
+    # progress as a pill like the other two counters: " 8/26 " in orange, the done share in full orange and
+    # the rest in a darker orange, so it reads as a counter and a bar at once (captain 2026-10-12)
+    cells = f" {n_done}/{n_all} "
     bw = len(cells)
-    bar = f"\033[1;38;2;255;255;255;48;2;215;119;87m{cells}{RESET}"
+    fill = max(1, round(bw * n_done / n_all)) if n_all and n_done else 0
+    bar = (f"\033[1;38;2;255;255;255;48;2;215;119;87m{cells[:fill]}"
+           f"\033[1;38;2;255;255;255;48;2;170;100;78m{cells[fill:]}{RESET}")
     bar_w = bw
     cols = [
         column("In Arbeit", ACCENT, doing, f"{BOLD}{ACCENT}●{RESET}", f"{BOLD}{TEXT}", "weitere", limit=len(doing),
