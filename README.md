@@ -12,6 +12,7 @@ Zeigt unter dem Claude-Code-Eingabefeld (ideal in [Herdr](https://herdr.dev)) di
 - **Live:** liest bei jeder Aktualisierung der Statuszeile die Aufgabenliste der Sitzung (`~/.claude/tasks/<session>/`).
 - **3 Spalten:** In Arbeit · Fertig (neueste zuerst) · Warteschlange – je max. 5 Einträge, Rest als „… +N“.
 - **Volle Breite:** fragt in Herdr die echte Fensterbreite ab (`herdr pane layout`, 30 s gecacht) und teilt sie in drei gleich breite Spalten; ohne Herdr 120 Zeichen. Zeilen brechen nie um.
+- **Zeitstempel:** In Arbeit „seit N min“ (ab 2 h „seit HH:MM“), Fertig mit Uhrzeit, Warteschlange „seit HH:MM“.
 - **Kimi-Look:** Kimis Glyphen und Grautöne, Akzentfarbe Claude-Orange; Fertiges durchgestrichen.
 - Keine Abhängigkeiten außer `python3`.
 

@@ -77,11 +77,24 @@ def main():
         pass
     cap = total // 3 - 2
 
+    def stamp(t):
+        """In Arbeit: 'seit N min' (< 2 h) else 'seit HH:MM'; Fertig: 'HH:MM'; Warteschlange: 'seit HH:MM'."""
+        ts = t.get("_mtime") or 0
+        if not ts:
+            return ""
+        hm = time.strftime("%H:%M", time.localtime(ts))
+        if t["status"] == "in_progress":
+            mins = int((time.time() - ts) // 60)
+            return f"seit {mins} min" if mins < 120 else f"seit {hm}"
+        return hm if t["status"] == "completed" else f"seit {hm}"
+
     def column(title, color, items, glyph, style, more_word):
         rows = [(f"{BOLD}{color}{title}{RESET}", width(title))]
         for t in items[:MAX_ROWS]:
-            txt = clip(LEAD.sub("", t.get("subject", "")), cap - 2)
-            rows.append((f"{glyph} {style}{txt}{RESET}", 2 + width(txt)))
+            st = stamp(t)
+            txt = clip(LEAD.sub("", t.get("subject", "")), cap - 3 - (len(st) + 1 if st else 0))
+            tail = f" {GREY}{st}{RESET}" if st else ""
+            rows.append((f"{glyph} {style}{txt}{RESET}{tail}", 2 + width(txt) + (len(st) + 1 if st else 0)))
         if len(items) > MAX_ROWS:
             m = f"… +{len(items) - MAX_ROWS} {more_word}"
             rows.append((f"{GREY}{m}{RESET}", width(m)))
