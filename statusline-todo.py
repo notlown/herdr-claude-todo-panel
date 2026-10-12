@@ -78,11 +78,13 @@ def main():
     widths = [min(cap, max(w for _, w in c)) + 3 for c in cols]
     lines = []
     for i in range(max(len(c) for c in cols)):
-        line = "  "
+        line = "\u00a0\u00a0"
         for j, c in enumerate(cols):
             txt, w = c[i] if i < len(c) else ("", 0)
-            line += txt + (" " * (widths[j] - w) if j < len(cols) - 1 else "")
-        lines.append(line.rstrip())
+            # no-break spaces: Claude's status line collapses leading/plain whitespace, which shifted a
+            # later column under an empty earlier one (captain bug report 2026-10-12)
+            line += txt + ("\u00a0" * (widths[j] - w) if j < len(cols) - 1 else "")
+        lines.append(line.rstrip(" \u00a0"))
     # two padding rows so the panel does not sit on the window's bottom edge (captain 2026-10-12);
     # a no-break space survives the status line's blank-line trimming
     lines += ["\u00a0", "\u00a0"]
