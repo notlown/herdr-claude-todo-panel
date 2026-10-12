@@ -108,16 +108,16 @@ def main():
     widths = [cap + 3 for _ in cols]  # equal thirds: use the whole bottom width
     lines = []
     for i in range(max(len(c) for c in cols)):
-        line = "\u00a0\u00a0"
+        line = "\u2800\u2800"
         for j, c in enumerate(cols):
             txt, w = c[i] if i < len(c) else ("", 0)
             # no-break spaces: Claude's status line collapses leading/plain whitespace, which shifted a
             # later column under an empty earlier one (captain bug report 2026-10-12)
-            line += txt + ("\u00a0" * (widths[j] - w) if j < len(cols) - 1 else "")
-        lines.append(line.rstrip(" \u00a0"))
+            line += txt + ("\u2800" * (widths[j] - w) if j < len(cols) - 1 else "")
+        lines.append(line.rstrip(" \u2800"))
     # two padding rows so the panel does not sit on the window's bottom edge (captain 2026-10-12);
     # a no-break space survives the status line's blank-line trimming
-    lines += ["\u00a0", "\u00a0"]
+    lines += ["\u2800", "\u2800"]
     print("\n".join(lines))
 
 
